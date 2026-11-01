@@ -1,0 +1,17 @@
+{
+  "name": "voicedesk",
+  "version": "1.0.0",
+  "description": "VoiceDesk - Multilingual Voice Customer Support for TeleNova (Gnani Challenge)",
+  "private": true,
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "seed": "npm --prefix server run seed",
+    "eval": "npx ts-node evals/run_eval.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
