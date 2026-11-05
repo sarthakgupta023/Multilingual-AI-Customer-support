@@ -6,13 +6,11 @@ import { EventEmitter } from 'events';
 const audioPhraseCache = new Map<string, string[]>();
 
 export class GnaniTTSGateway extends EventEmitter {
-  private ws: WebSocket | null = null;
-  private isConnected = false;
   private langCode: string;
 
   constructor(langCode: string = 'en') {
     super();
-    this.langCode = langCode;
+    this.langCode = langCode.split('-')[0]; // Ensure 'en', 'hi', 'ta', etc.
   }
 
   public async synthesizeSentence(sentence: string): Promise<void> {
@@ -33,13 +31,12 @@ export class GnaniTTSGateway extends EventEmitter {
     // 2. Mock mode fallback
     if (config.gnani.isMock) {
       console.log(`[Gnani TTS] Mock synthesizing: "${trimmed}" (${this.langCode})`);
-      // Emit a brief mock audio event so client knows speech happened
-      this.emit('audio_chunk', 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='); // Empty 44-byte wav
+      this.emit('audio_chunk', 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
       this.emit('complete');
       return;
     }
 
-    // 3. Connect to Gnani Timbre Streaming TTS
+    // 3. Connect to Gnani Timbre Streaming TTS WebSocket
     return new Promise((resolve, reject) => {
       try {
         const ws = new WebSocket(config.gnani.ttsWsUrl, {
@@ -51,10 +48,10 @@ export class GnaniTTSGateway extends EventEmitter {
         const accumulatedChunks: string[] = [];
 
         ws.on('open', () => {
-          // Payload specification for Timbre streaming
           const payload = {
             text: trimmed,
-            model: 'timbre-v3', // or timbre-v2.5
+            model: config.gnani.defaultModel || 'timbre-v3.0',
+            voice: config.gnani.defaultVoice || 'Shivani',
             language: this.langCode,
             audio_config: {
               audio_encoding: 'LINEAR16',
@@ -67,18 +64,28 @@ export class GnaniTTSGateway extends EventEmitter {
         ws.on('message', (data: WebSocket.RawData) => {
           try {
             const parsed = JSON.parse(data.toString());
-            if (parsed.audio) {
-              accumulatedChunks.push(parsed.audio);
-              this.emit('audio_chunk', parsed.audio);
+            const base64Audio = parsed.data?.audio || parsed.audio;
+
+            if (base64Audio && base64Audio.length > 0) {
+              accumulatedChunks.push(base64Audio);
+              this.emit('audio_chunk', base64Audio);
             }
-            if (parsed.status === 'complete' || parsed.type === 'complete') {
-              audioPhraseCache.set(cacheKey, accumulatedChunks);
+
+            if (parsed.type === 'complete' || (parsed.data && parsed.data.is_final)) {
+              if (accumulatedChunks.length > 0) {
+                audioPhraseCache.set(cacheKey, accumulatedChunks);
+              }
               this.emit('complete');
               ws.close();
               resolve();
+            } else if (parsed.type === 'error') {
+              console.error('[Gnani TTS] WebSocket error response:', parsed.message);
+              this.emit('error', new Error(parsed.message));
+              ws.close();
+              reject(new Error(parsed.message));
             }
           } catch (e) {
-            // Raw binary audio chunk
+            // Raw binary audio fallback
             const base64 = Buffer.from(data as any).toString('base64');
             accumulatedChunks.push(base64);
             this.emit('audio_chunk', base64);
@@ -86,7 +93,7 @@ export class GnaniTTSGateway extends EventEmitter {
         });
 
         ws.on('error', (err) => {
-          console.error('[Gnani TTS] WebSocket error:', err);
+          console.error('[Gnani TTS] WebSocket error:', err.message);
           this.emit('error', err);
           reject(err);
         });
