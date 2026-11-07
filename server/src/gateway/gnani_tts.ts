@@ -1,6 +1,6 @@
-import WebSocket from 'ws';
-import { config } from '../config.js';
 import { EventEmitter } from 'events';
+import WebSocket from 'ws';
+import { config } from '../config';
 
 // Static phrase cache map: key = `${langCode}:${textHash}`
 const audioPhraseCache = new Map<string, string[]>();

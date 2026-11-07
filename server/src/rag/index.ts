@@ -1,7 +1,7 @@
-import { config } from '../config.js';
-import { ConversationTurn, GroundedAnswer, SearchResult } from './types.js';
-import { localVectorStore } from './local_store.js';
-import { supabaseVectorStore } from './supabase_store.js';
+import { config } from '../config';
+import { localVectorStore } from './local_store';
+import { supabaseVectorStore } from './supabase_store';
+import { ConversationTurn, GroundedAnswer, SearchResult } from './types';
 
 const SIMILARITY_THRESHOLD = 0.52;
 

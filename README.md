@@ -1,85 +1,47 @@
-# VoiceDesk – Multilingual AI Voice Customer Support (TeleNova)
+# Multilingual Customer Support – TeleNova Telecom
 
-VoiceDesk is a real-time, grounded voice customer support agent built for the **Gnani Challenge** (Great Indian AI Internship Challenge). It allows customers to speak naturally in **10 Indian languages** (plus Hinglish), cross-lingually retrieves answers from **TeleNova Telecom's official policy documents**, speaks back in the customer's language with streaming low latency, and raises support tickets for unanswerable inquiries.
+**Multilingual Customer Support** is an enterprise-grade, grounded voice customer support platform built for the **Gnani Challenge** (Great Indian AI Internship Challenge). It empowers customers to speak naturally in **10 Indian languages** (and mixed Hinglish), cross-lingually retrieves facts from **TeleNova's official policy documents**, speaks back in the customer's language using live streaming neural voice, and routes unanswerable or complex issues to a dedicated **Human Support Admin Desk**.
 
 ---
 
-## 🏗️ Architecture & Core Components
+## 🏛️ Architecture & Dual-Portal System
 
-1. **Client (`/client`)**: Mobile-first React + Vite + Tailwind CSS app.
-   - **AudioWorklet**: Real-time microphone capture converting audio to 16kHz 16-bit mono PCM.
-   - **Full-Duplex WebSocket**: Streams audio to backend, receives live transcripts, Markdown answers, verified citations, and audio chunks.
-   - **Streaming Web Audio Player**: Decodes base64 Linear16/WAV chunks into a seamless audio buffer queue with immediate **Barge-in** interruption.
-   - **Language Selector**: Supports all 10 Gnani languages (Hindi, Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, English).
-   - **Support Ticket Escalation**: Interactive modal when questions fall outside TeleNova's knowledge base.
+### 1. Customer Voice Portal (`/client`)
+- **Classic Enterprise Theme**: Clean, accessible, high-contrast telecom service desk styling (warm neutral canvas, crisp white cards, classic deep navy accents).
+- **Push-to-Talk & Streaming Voice**: `AudioWorklet` captures 16-bit PCM mono audio over full-duplex WebSocket (`/ws/voice`).
+- **Grounded Dual Response**: Shows full written answer with verified policy citations (`[TN-POL-XX]`), while streaming a spoken summary through Gnani Timbre.
+- **Dual Telephony Modes**: Switch between **16kHz Studio HD Voice** and **8kHz Narrowband Telephony Line** (G.711 bandpass filter, 300Hz–3400Hz).
+- **Instant Barge-In**: User can interrupt audio synthesis at any millisecond.
+- **Support Escalation**: One-click escalation to human representatives when inquiries fall outside policy scope.
 
-2. **Server (`/server`)**: Node.js + Express + WebSocket relay.
-   - **Gnani Prisma STT Gateway**: Upstream WebSocket bridge to `wss://api.vachana.ai/stt/v3/stream`.
-   - **Gnani Timbre TTS Gateway**: Upstream streaming TTS to `wss://api.vachana.ai/api/v1/tts`.
-   - **Local Phrase Cache**: Caches repeated greetings, thinking states, and ticket prompts to conserve the 5,000 credit budget and drop TTFA to <50ms.
-   - **Cross-Lingual RAG Engine**: Semantic multilingual retrieval with dynamic thresholding to prevent hallucinations.
-   - **Turn Logger & Telemetry**: Records Time To First Audio (TTFA), total latency, and source citations for evaluation.
+### 2. Human Support Admin Desk (`/client/src/components/AdminSupportDesk.tsx`)
+- **Escalation Queue**: View all customer support tickets (`TN-SR-XXXXXX`), language used, inquiry transcript, and escalation summary.
+- **Status Lifecycle**: Toggle tickets between `OPEN`, `IN_PROGRESS`, and `RESOLVED`.
+- **Human Agent Notes**: Representative notes and resolution logging saved directly to the database/state.
+- **Live Turn Telemetry**: Real-time audit feed of all customer interactions with Time-To-First-Audio (TTFA) and cosine retrieval scores.
 
-3. **Knowledge Base (`/data/policies`)**: 12 detailed synthetic policy documents:
-   - Prepaid tariffs, Postpaid billing, MNP porting, eSIM & lost SIM replacement, International roaming (GlobalPass), 5G Ultra & FUP, Complaints & refunds, Network APN settings, Fiber broadband, DND & spam protection, Recharge methods & cashback, and KYC reverification rules.
-
-4. **Evaluation Harness (`/evals`)**:
-   - 30 domain-specific questions in English, Hindi, and Tamil + 5 out-of-domain control questions.
-   - Automated runner for Hit Rate, Refusal Accuracy, and Latency profiling.
+### 3. Backend & Gateway (`/server`)
+- **Gnani Prisma STT**: Streaming WebSocket bridge with BCP-47 language codes (`en-IN`, `hi-IN`, `ta-IN`, etc.).
+- **Gnani Timbre TTS**: Low-latency streaming neural synthesis (`timbre-v3.0`, `Shivani` voice) with sentence-by-sentence pipelining.
+- **Knowledge Base (`/data/policies`)**: 12 verified telecom policies (prepaid tariffs, postpaid billing, MNP, eSIM, roaming, 5G FUP, refunds, APN, fiber, DND, recharge, KYC).
+- **RAG Engine**: Multilingual vector embeddings and concept mapping with strict refusal thresholding.
 
 ---
 
 ## 🚀 Quickstart (Running Locally)
 
-### 1. Install & Run in Mock Mode (No API keys required)
-VoiceDesk comes with a built-in mock mode so you can test and develop immediately:
-
 ```bash
-# Terminal 1: Run Backend
+# 1. Start Server (Backend)
 cd server
 npm install
 npm run dev
 
-# Terminal 2: Run Frontend
+# 2. Start Client (Frontend)
 cd client
 npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000` to interact with VoiceDesk.
-
----
-
-## 🔑 Actual Data & API Keys Needed (To Go Live)
-
-To connect live models, update `server/.env`:
-
-| Key Name | Where to get it | Purpose |
-| :--- | :--- | :--- |
-| `GNANI_API_KEY` | [app.gnani.ai/voice](https://app.gnani.ai/voice) | Streaming STT (Prisma) and TTS (Timbre) |
-| `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com) | Cross-lingual embeddings (`text-embedding-3-small`) and strict answer formulation (`gpt-4o-mini`) |
-| `SUPABASE_URL` | [supabase.com](https://supabase.com) | Vector database for TeleNova policies |
-| `SUPABASE_SERVICE_KEY` | Supabase Project Settings -> API | Service role key for vector matching RPC |
-
-### Switching from Mock to Live
-Once keys are added to `server/.env`, change:
-```env
-MOCK_GNANI=false
-MOCK_LLM=false
-USE_LOCAL_VECTOR_STORE=false
-```
-
-And run the vector database seed:
-```bash
-npm run seed
-```
-
----
-
-## 📊 Running Evaluations
-
-Run the automated 35-test benchmark suite across English, Hindi, and Tamil:
-```bash
-npm run eval
-```
-The report will be output to console and saved as `evals/benchmark_report.json`.
+Visit `http://localhost:3000` in Google Chrome:
+- Click **"Voice Customer Desk"** to speak with the telecom assistant.
+- Click **"Human Support Admin"** in the top navigation to view and manage escalated customer tickets!

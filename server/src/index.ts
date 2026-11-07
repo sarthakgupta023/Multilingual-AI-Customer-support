@@ -1,13 +1,13 @@
+import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import { config } from './config.js';
-import { handleVoiceWebSocket } from './ws/voice_handler.js';
-import { ragService } from './rag/index.js';
-import { ticketService } from './services/ticket_service.js';
-import { turnLogger } from './services/turn_logger.js';
-import { localVectorStore } from './rag/local_store.js';
+import { config } from './config';
+import { ragService } from './rag/index';
+import { localVectorStore } from './rag/local_store';
+import { ticketService } from './services/ticket_service';
+import { turnLogger } from './services/turn_logger';
+import { handleVoiceWebSocket } from './ws/voice_handler';
 
 const app = express();
 app.use(cors());
@@ -66,6 +66,39 @@ app.post('/api/tickets', async (req, res) => {
 
 app.get('/api/tickets', (req, res) => {
   res.json(ticketService.getTickets());
+});
+
+app.patch('/api/tickets/:id', (req, res) => {
+  const updated = ticketService.updateTicket(req.params.id, req.body);
+  if (!updated) {
+    return res.status(404).json({ error: 'Ticket not found' });
+  }
+  res.json(updated);
+});
+
+app.delete('/api/tickets/:id', (req, res) => {
+  const success = ticketService.deleteTicket(req.params.id);
+  if (!success) {
+    return res.status(404).json({ error: 'Ticket not found' });
+  }
+  res.json({ success: true, id: req.params.id });
+});
+
+// Admin stats endpoint
+app.get('/api/admin/stats', (req, res) => {
+  const ticketStats = ticketService.getStats();
+  const turns = turnLogger.getLogs();
+  const avgLatency = turns.length > 0 
+    ? Math.round(turns.reduce((acc, t) => acc + (t.totalTurnDurationMs || 0), 0) / turns.length)
+    : 0;
+
+  res.json({
+    tickets: ticketStats,
+    totalTurns: turns.length,
+    avgLatencyMs: avgLatency,
+    gnaniLive: !config.gnani.isMock,
+    llmProvider: config.llm.provider,
+  });
 });
 
 // Evaluation / Admin Turn logs endpoint

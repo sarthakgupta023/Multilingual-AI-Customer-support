@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { config } from '../config.js';
-import { SearchResult } from './types.js';
+import { config } from '../config';
+import { SearchResult } from './types';
 
 export class SupabaseVectorStore {
   private client: SupabaseClient | null = null;

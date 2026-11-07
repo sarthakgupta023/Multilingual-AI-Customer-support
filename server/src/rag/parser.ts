@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { PolicyChunk } from './types.js';
-import { config } from '../config.js';
+import { config } from '../config';
+import { PolicyChunk } from './types';
 
 export function loadAndChunkPolicies(policiesDir: string = config.paths.policiesDir): PolicyChunk[] {
   if (!fs.existsSync(policiesDir)) {

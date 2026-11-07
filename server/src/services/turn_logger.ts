@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { config } from '../config.js';
+import { config } from '../config';
 
 export interface TurnLog {
   id: string;

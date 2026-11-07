@@ -1,6 +1,6 @@
-import { PolicyChunk, SearchResult } from './types.js';
-import { loadAndChunkPolicies } from './parser.js';
-import { config } from '../config.js';
+import { config } from '../config';
+import { loadAndChunkPolicies } from './parser';
+import { PolicyChunk, SearchResult } from './types';
 
 // Multilingual synonyms and concepts mapped to English policy documents
 const SYNONYM_MAP: Record<string, string[]> = {

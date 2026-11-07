@@ -28,17 +28,17 @@ interface Props {
 
 export const LanguageSelector: React.FC<Props> = ({ selectedLanguage, onSelectLanguage, disabled }) => {
   return (
-    <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 shadow-sm">
-      <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
+    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-sm hover:border-slate-400 transition">
+      <Globe className="w-4 h-4 text-slate-500 shrink-0" />
       <select
         value={selectedLanguage}
         onChange={(e) => onSelectLanguage(e.target.value)}
         disabled={disabled}
-        aria-label="Select preferred language"
-        className="bg-transparent text-sm font-medium text-slate-200 outline-none cursor-pointer pr-2 hover:text-white transition"
+        aria-label="Select customer language"
+        className="bg-transparent text-xs font-semibold text-slate-800 outline-none cursor-pointer pr-1"
       >
         {SUPPORTED_LANGUAGES.map((lang) => (
-          <option key={lang.code} value={lang.code} className="bg-slate-800 text-slate-100">
+          <option key={lang.code} value={lang.code} className="bg-white text-slate-900">
             {lang.native} ({lang.name})
           </option>
         ))}

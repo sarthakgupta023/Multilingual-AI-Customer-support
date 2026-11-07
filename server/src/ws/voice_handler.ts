@@ -1,10 +1,10 @@
 import WebSocket from 'ws';
-import { GnaniSTTGateway } from '../gateway/gnani_stt.js';
-import { GnaniTTSGateway } from '../gateway/gnani_tts.js';
-import { ragService } from '../rag/index.js';
-import { ConversationTurn } from '../rag/types.js';
-import { ticketService } from '../services/ticket_service.js';
-import { turnLogger } from '../services/turn_logger.js';
+import { GnaniSTTGateway } from '../gateway/gnani_stt';
+import { GnaniTTSGateway } from '../gateway/gnani_tts';
+import { ragService } from '../rag/index';
+import { ConversationTurn } from '../rag/types';
+import { ticketService } from '../services/ticket_service';
+import { turnLogger } from '../services/turn_logger';
 
 export function handleVoiceWebSocket(ws: WebSocket) {
   const sessionId = crypto.randomUUID();

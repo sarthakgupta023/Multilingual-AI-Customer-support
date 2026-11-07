@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { config } from '../config.js';
-import { loadAndChunkPolicies } from '../rag/parser.js';
+import { config } from '../config';
+import { loadAndChunkPolicies } from '../rag/parser';
 
 async function seed() {
   console.log('--- Starting TeleNova Policy Seed ---');

@@ -1,6 +1,6 @@
-import WebSocket from 'ws';
-import { config } from '../config.js';
 import { EventEmitter } from 'events';
+import WebSocket from 'ws';
+import { config } from '../config';
 
 // Map generic language code to Gnani Prisma STT BCP-47 codes
 const GNANI_STT_LANG_MAP: Record<string, string> = {
