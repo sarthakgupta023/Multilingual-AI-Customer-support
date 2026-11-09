@@ -1,36 +1,25 @@
-# Submission notes — Nova
+# Nova — multilingual, voice-first policy support
 
-## Project
+## Overview
 
-**Nova: multilingual, voice-first policy support**
+Nova helps people navigate policy documents through a conversational interface. Users can ask a question in text or speech, receive an accessible explanation, and review references to the policy passages used in the response. The assistant preserves context for follow-up questions and offers a human-support ticket when it cannot verify sufficient evidence.
 
-People often need to understand policies written in unfamiliar or formal language. Nova lets a user ask a question by speech or text, retrieves relevant policy passages, and returns a simpler response with source references. If the policy or supporting evidence is insufficient, it offers a human-support ticket.
+## User experience
 
-## What is implemented
+- **Voice and language access:** The interface offers English and ten Indian languages, with speech recognition, spoken responses, and a control to stop playback. Voice functionality depends on the configured speech provider.
+- **Policy-grounded responses:** Relevant document passages inform the response, with policy names and PDF page references where available. When supporting evidence cannot be verified, Nova presents an unverified excerpt and offers support.
+- **Conversational continuity:** Follow-up questions can use previous context, and signed-in users can return to their recent conversation history. Each account retains its latest 200 messages.
+- **Human support:** Users can create support tickets, and an administrator can review and update their status.
+- **Policy management:** Administrators can upload or replace text-based PDFs, Markdown, and text documents to update the searchable knowledge base.
 
-- Gnani Prisma speech-to-text over WebSocket and Gnani Timbre text-to-speech; the configured TTS model and voice are controlled by environment variables.
-- A Python/FastAPI service and LangGraph workflow for query rewriting, retrieval, grounded response generation, and support escalation.
-- PostgreSQL with pgvector and a local `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` embedding model; uploaded PDFs are searchable by cosine similarity.
-- Policy document uploads, PDF page references, persistent accounts and tickets, and a stop-voice control.
-- The currently configured answer-generation LLM is separate from Gnani: Qwen through Groq. Do not describe it as a Gnani model.
+## Technical approach
 
-## Suggested demo — use synthetic data only
+The React client communicates with a Python/FastAPI backend. A LangGraph workflow coordinates question rewriting, policy retrieval, response generation, and support escalation. Gnani Prisma provides speech-to-text over WebSocket, and Gnani Timbre provides text-to-speech when configured.
 
-1. Start the local database, Python server, and browser client as described in `README.md`.
-2. Sign in to the admin desk and upload `examples/demo-policy.md` with document ID `DEMO-LEAVE-01` and title `Sundial Demo Services Leave Policy`.
-3. Ask: “According to the Sundial demo leave policy, how many paid leave days do full-time employees receive?” Show the answer and the policy citation.
-4. Ask a follow-up such as “How early should I request it?” Show how the conversation uses prior context.
-5. Ask something the policy does not cover. Show the uncertainty message and the option to create a support ticket.
-6. If tested and working on your setup, demonstrate voice input, a supported Indian language, and the stop-voice button. Show real behavior; do not stage provider output.
+Nova generates policy embeddings locally using `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. PostgreSQL with pgvector stores the embeddings and retrieves relevant passages using cosine similarity. A separately configured language model generates the answer from those passages. PostgreSQL also stores accounts, sessions, recent messages, tickets, and policy data.
 
-Uploaded policies are visible to signed-in users and relevant excerpts are sent to the configured language-model provider. Never upload real personal or sensitive data for a public demo.
+The user's question and retrieved passages are sent to the configured language-model provider for answer generation. Source and evidence checks are designed to make responses more transparent; they do not guarantee correctness.
 
-The one-page solution pitch is in `SOLUTION_PITCH.md`; a timed recording guide is in `DEMO_SCRIPT.md`.
+## Project status
 
-## Submission checklist
-
-- Confirm eligibility and read the [official challenge terms](https://www.gnani.ai/great-indian-ai-internship-registration-form).
-- Record an honest working demo using synthetic data. Name the Gnani APIs used and accurately describe any other models.
-- Provide an accessible project link containing the one-page pitch and an accessible 2–3 minute demo video link.
-- Optionally, for the bonus awards category shown on the form, post about the solution on LinkedIn or X, tag Gnani, and provide the post link. Verify the current rules and deadline on the challenge site.
-- Include only results that you actually measured. The repository does not establish accuracy for all languages or noisy speech.
+Nova is a working prototype combining multilingual interaction, document retrieval, citations, persistent history, and support escalation. Further evaluation is needed to establish answer accuracy and speech quality across languages and real-world conditions. Production use would also require stronger identity controls, operational monitoring, security review, and load testing.
