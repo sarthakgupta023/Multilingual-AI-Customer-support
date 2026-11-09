@@ -38,7 +38,7 @@ For a hosted environment such as Supabase, set `DATABASE_URL` to that environmen
 
 The `Dockerfile` builds the browser assets and runs the Python server as one service. Set `DATABASE_URL`, `ADMIN_PASSWORD` (at least 12 characters in production), `NODE_ENV=production`, and any provider keys in the host's secret settings. The host must support HTTPS and WebSockets. `/api/health` checks database connectivity. The server must be able to reach PostgreSQL with pgvector installed and enabled; configure the provider's TLS/certificate requirements. The Docker build downloads the local embedding model, so it needs network access during the build. The private database schema must not be exposed through Supabase Data APIs.
 
-Before publishing, rotate any credential previously present in Git history and assess whether history must be rewritten. This remains a prototype: use an identity provider with verified email, password recovery and admin MFA; add distributed rate limiting, backups, retention controls, monitoring, and end-to-end security and load testing before deploying for real users.
+This remains a prototype: use an identity provider with verified email, password recovery and admin MFA; add distributed rate limiting, backups, retention controls, monitoring, and end-to-end security and load testing before deploying for real users.
 
 ## Tests and evaluation
 
