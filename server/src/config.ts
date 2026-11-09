@@ -30,11 +30,11 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   
   gnani: {
-    apiKey: process.env.GNANI_API_KEY || 'vach_1ytE2CY5X2PJobx8lbgDIWNmYqKRNBLsyPBpprJuCfvqdiYU91zFuKRONknaz6PjGUoyFeSmjvf0xS2O36A3tT5HVYyd4APi_c4f54fd8132894568360b878e4420e68',
+    apiKey: process.env.GNANI_API_KEY || '',
     sttWsUrl: process.env.GNANI_STT_WS_URL || 'wss://api.vachana.ai/stt/v3/stream',
     ttsWsUrl: process.env.GNANI_TTS_WS_URL || 'wss://api.vachana.ai/api/v1/tts',
     ttsFileUrl: process.env.GNANI_TTS_FILE_URL || 'https://api.vachana.ai/api/v1/tts/inference',
-    isMock: process.env.MOCK_GNANI === 'true',
+    isMock: process.env.MOCK_GNANI === 'true' || !process.env.GNANI_API_KEY,
     defaultVoice: process.env.GNANI_VOICE || 'Shivani',
     defaultModel: process.env.GNANI_TTS_MODEL || 'timbre-v3.0',
   },
@@ -55,6 +55,6 @@ export const config = {
   },
   
   paths: {
-    policiesDir: path.resolve(process.cwd(), '../data/policies'),
+    policiesDir: path.resolve(__dirname, '../../data/policies'),
   }
 };

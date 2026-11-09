@@ -8,10 +8,12 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:4000',
-        changeOrigin: true,
+        // Preserve the browser host for the API origin check.
+        changeOrigin: false,
       },
       '/ws': {
         target: 'ws://localhost:4000',
+        changeOrigin: false,
         ws: true,
       },
     },

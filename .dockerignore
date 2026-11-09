@@ -1,0 +1,11 @@
+.git
+**/node_modules
+**/dist
+**/.env*
+**/runtime-data.json*
+scratch
+.DS_Store
+
+.local-postgres/
+.local-postgres-password
+.venv/

@@ -200,7 +200,7 @@ JSON Response:`;
     }];
 
     let full = `According to **${top.docTitle}** (${top.sectionTitle}):\n\n${top.content.split('\n').slice(1, 6).join('\n')}`;
-    let spoken = `According to TeleNova's ${top.docTitle}, ${top.sectionTitle} details are available. Please check the screen for complete terms.`;
+    let spoken = top.content.split('\n').slice(1, 4).join(' ').replace(/[*#|]/g, ' ').replace(/\s+/g, ' ').trim() || `Here is what I found about ${top.sectionTitle}.`;
 
     if (languageCode.startsWith('hi')) {
       spoken = `टेलीनोवा के ${top.docTitle} के अनुसार पूरी जानकारी स्क्रीन पर उपलब्ध है।`;

@@ -4,12 +4,12 @@
   "description": "VoiceDesk - Multilingual Voice Customer Support for TeleNova (Gnani Challenge)",
   "private": true,
   "scripts": {
-    "dev:server": "npm --prefix server run dev",
+    "dev:server": "./.venv/bin/uvicorn server.app.main:app --reload --port 4000",
     "dev:client": "npm --prefix client run dev",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "npm --prefix server run build && npm --prefix client run build",
-    "seed": "npm --prefix server run seed",
-    "eval": "npx ts-node evals/run_eval.ts"
+    "build": "npm --prefix client run build",
+    "test": "./.venv/bin/python -m pytest server/tests",
+    "eval": "./.venv/bin/python -m evals.run_eval"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

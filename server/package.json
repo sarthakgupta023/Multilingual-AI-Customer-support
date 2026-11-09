@@ -4,16 +4,19 @@
   "description": "VoiceDesk Backend Relay & Cross-Lingual RAG Engine",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "../.venv/bin/uvicorn app.main:app --reload --port 4000",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "seed": "ts-node src/scripts/seed.ts"
+    "start": "../.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 4000",
+    "seed": "ts-node src/scripts/seed.ts",
+    "import:local": "ts-node src/scripts/import_local.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
+    "@types/pg": "^8.23.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "pg": "^8.23.1",
     "ws": "^8.18.1"
   },
   "devDependencies": {

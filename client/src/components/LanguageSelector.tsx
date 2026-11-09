@@ -18,6 +18,7 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'mr', name: 'Marathi', native: 'मराठी' },
   { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
   { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ' },
+  { code: 'as', name: 'Assamese', native: 'অসমীয়া' },
 ];
 
 interface Props {
