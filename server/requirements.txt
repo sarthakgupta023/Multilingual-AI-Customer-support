@@ -1,9 +1,10 @@
-fastapi>=0.115,<1
-uvicorn[standard]>=0.30,<1
-langgraph>=1,<2
-psycopg[binary,pool]>=3.2,<4
-python-dotenv>=1,<2
-httpx>=0.27,<1
-websockets>=14,<16
-
-pypdf>=5,<7
+# Direct dependencies used and tested with this application.
+fastapi==0.162.2
+uvicorn[standard]==0.54.0
+langgraph==1.2.20
+psycopg[binary,pool]==3.3.8
+python-dotenv==1.2.4
+httpx==0.28.1
+websockets==15.0.1
+pypdf==6.21.4
+fastembed==0.9.1

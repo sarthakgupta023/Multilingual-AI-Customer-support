@@ -9,8 +9,9 @@ FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 NODE_ENV=production PORT=4000
 WORKDIR /app
 COPY server/requirements.txt ./server/requirements.txt
-RUN pip install --no-cache-dir -r server/requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade 'pip>=26.2' && python -m pip install --no-cache-dir -r server/requirements.txt
 COPY server/app ./server/app
+RUN HF_HUB_DISABLE_XET=1 python -m server.app.download_embedding_model
 COPY data/policies ./data/policies
 COPY --from=frontend /app/client/dist ./client/dist
 RUN useradd --create-home appuser

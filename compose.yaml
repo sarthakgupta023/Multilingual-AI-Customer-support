@@ -1,0 +1,19 @@
+# Optional local development database. Keep LOCAL_DB_PASSWORD in server/.env.
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg16
+    environment:
+      POSTGRES_USER: nova_dev
+      POSTGRES_DB: nova_dev
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:?Set LOCAL_DB_PASSWORD in server/.env}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - nova_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nova_dev -d nova_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+volumes:
+  nova_db:

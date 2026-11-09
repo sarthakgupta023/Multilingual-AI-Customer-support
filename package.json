@@ -8,7 +8,7 @@
     "dev:client": "npm --prefix client run dev",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "npm --prefix client run build",
-    "test": "./.venv/bin/python -m pytest server/tests",
+    "test": "./.venv/bin/python -m pytest server/tests && npm --prefix client run test",
     "eval": "./.venv/bin/python -m evals.run_eval"
   },
   "devDependencies": {

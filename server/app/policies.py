@@ -9,9 +9,26 @@ MAX_PAGES = 100
 MAX_TEXT_CHARS = 1_000_000
 
 
-def split_text(text, size=1600):
+def split_text(text, size=1600, overlap=200):
+    """Create bounded overlapping passages, splitting on word boundaries when possible."""
     text = re.sub(r'\s+', ' ', text).strip()
-    return [text[i:i+size] for i in range(0, len(text), size) if text[i:i+size].strip()]
+    if not text: return []
+    if size <= 0 or overlap < 0 or overlap >= size: raise ValueError('Invalid passage size or overlap')
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = min(start + size, len(text))
+        if end < len(text):
+            boundary = text.rfind(' ', start + size // 2, end)
+            if boundary > start: end = boundary
+        chunks.append(text[start:end].strip())
+        if end == len(text): break
+        next_start = max(start + 1, end - overlap)
+        if next_start > 0 and text[next_start - 1] != ' ':
+            boundary = text.find(' ', next_start, end)
+            next_start = boundary + 1 if boundary != -1 else end
+        start = next_start
+    return [chunk for chunk in chunks if chunk]
 
 
 def parse_policy(raw: bytes, filename: str, doc_id: str, title: str):

@@ -1,19 +1,28 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and build outputs
 node_modules/
 dist/
 build/
-.env
-.env.local
-*.log
-.DS_Store
-scratch/
-
-server/runtime-data.json
-server/runtime-data.json.tmp
-
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
 
+# Local databases, uploads, and model cache
 .local-postgres/
 .local-postgres-password
+server/runtime-data.json
+server/runtime-data.json.tmp
+server/.model-cache/
+*.sqlite3
+
+# Local experiments and OS files
+scratch/
+*.log
+.DS_Store

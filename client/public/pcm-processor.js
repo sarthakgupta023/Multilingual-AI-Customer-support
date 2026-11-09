@@ -1,37 +1,39 @@
-// AudioWorklet processor for downsampling and converting to 16-bit PCM (16kHz or 8kHz Mono)
+// Produce provider-sized 512-sample PCM frames at the requested sample rate.
+// Keep the resampling phase across AudioWorklet blocks (which may be 44.1 kHz).
 class PCMProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.targetSampleRate = 16000;
-    this.port.onmessage = (e) => {
-      if (e.data && e.data.targetSampleRate) {
-        this.targetSampleRate = e.data.targetSampleRate;
+    this.phase = 0;
+    this.frame = new Int16Array(512);
+    this.frameLength = 0;
+    this.port.onmessage = (event) => {
+      const rate = event.data?.targetSampleRate;
+      if ((rate === 8000 || rate === 16000) && rate !== this.targetSampleRate) {
+        this.targetSampleRate = rate;
+        this.phase = 0;
+        this.frame = new Int16Array(512);
+        this.frameLength = 0;
       }
     };
   }
 
-  process(inputs, outputs, parameters) {
-    const input = inputs[0];
-    if (!input || !input[0]) return true;
-
-    const channelData = input[0]; // mono float32 channel [-1.0, 1.0]
-
-    // Convert Float32 to 16-bit signed PCM with downsampling if required
-    const step = sampleRate / this.targetSampleRate;
-    const outputLength = Math.floor(channelData.length / step);
-    const pcm16 = new Int16Array(outputLength);
-
-    for (let i = 0; i < outputLength; i++) {
-      const srcIdx = Math.floor(i * step);
-      let s = Math.max(-1, Math.min(1, channelData[srcIdx]));
-      pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  process(inputs) {
+    const samples = inputs[0]?.[0];
+    if (!samples) return true;
+    for (const sample of samples) {
+      this.phase += this.targetSampleRate;
+      if (this.phase < sampleRate) continue;
+      this.phase -= sampleRate;
+      const value = Math.max(-1, Math.min(1, sample));
+      this.frame[this.frameLength++] = value < 0 ? value * 0x8000 : value * 0x7fff;
+      if (this.frameLength === this.frame.length) {
+        this.port.postMessage(this.frame.buffer, [this.frame.buffer]);
+        this.frame = new Int16Array(512);
+        this.frameLength = 0;
+      }
     }
-
-    // Post raw PCM buffer to main thread
-    this.port.postMessage(pcm16.buffer, [pcm16.buffer]);
-
     return true;
   }
 }
-
 registerProcessor('pcm-processor', PCMProcessor);

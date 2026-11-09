@@ -7,7 +7,12 @@ if [ ! -f "$DATA/PG_VERSION" ]; then
   exit 1
 fi
 case "${1:-status}" in
-  start) pg_ctl -D "$DATA" -l "$DATA/server.log" -o '-h 127.0.0.1 -p 55432' -w start ;;
+  start)
+    if pg_ctl -D "$DATA" status >/dev/null 2>&1; then
+      echo 'Local PostgreSQL is already running on port 55432.'
+    else
+      pg_ctl -D "$DATA" -l "$DATA/server.log" -o '-h 127.0.0.1 -p 55432' -w start
+    fi ;;
   stop) pg_ctl -D "$DATA" -w stop ;;
   status) pg_ctl -D "$DATA" status ;;
   *) echo 'Usage: scripts/local-postgres.sh start|stop|status' >&2; exit 2 ;;

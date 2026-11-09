@@ -1,92 +1,68 @@
+/** Plays streamed mono LINEAR16 at the rate reported by the server. */
 export class StreamingAudioPlayer {
   private ctx: AudioContext | null = null;
   private nextPlayTime = 0;
-  private isPlaying = false;
   private activeSourceNodes: AudioBufferSourceNode[] = [];
+  private generation = 0;
+  private pendingByte: number | null = null;
+  private started = false;
+  public onIdle?: () => void;
 
-  constructor() {
-    // AudioContext will be initialized on first user interaction
-  }
-
-  private initContext() {
+  public prepare() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AudioCtx({ sampleRate: 16000 });
+      this.ctx = new AudioCtx();
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+    if (this.ctx?.state === 'suspended') void this.ctx.resume();
   }
 
-  public async playChunk(base64Audio: string) {
-    this.initContext();
-    if (!this.ctx) return;
-
+  public async playChunk(base64Audio: string, sampleRate: number) {
+    this.prepare();
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const generation = this.generation;
     try {
-      const binaryString = atob(base64Audio);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      const binary = atob(base64Audio);
+      let bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      if (this.pendingByte !== null) {
+        const joined = new Uint8Array(bytes.length + 1);
+        joined[0] = this.pendingByte; joined.set(bytes, 1); bytes = joined;
+        this.pendingByte = null;
       }
-
-      // Check if it's a WAV header (starts with 'RIFF')
-      let audioBuffer: AudioBuffer;
+      let buffer: AudioBuffer;
       if (bytes.length > 12 && String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF') {
-        audioBuffer = await this.ctx.decodeAudioData(bytes.buffer.slice(0));
+        buffer = await ctx.decodeAudioData(bytes.buffer.slice(0));
       } else {
-        // Raw Linear16 PCM (16kHz mono)
-        const int16Array = new Int16Array(bytes.buffer);
-        const float32Array = new Float32Array(int16Array.length);
-        for (let i = 0; i < int16Array.length; i++) {
-          float32Array[i] = int16Array[i] / 32768.0;
-        }
-
-        audioBuffer = this.ctx.createBuffer(1, float32Array.length, 16000);
-        audioBuffer.copyToChannel(float32Array, 0);
+        if (bytes.length % 2) { this.pendingByte = bytes[bytes.length - 1]; bytes = bytes.slice(0, -1); }
+        if (!bytes.length) return;
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const samples = new Float32Array(bytes.length / 2);
+        for (let i = 0; i < samples.length; i++) samples[i] = view.getInt16(i * 2, true) / 32768;
+        buffer = ctx.createBuffer(1, samples.length, sampleRate);
+        buffer.copyToChannel(samples, 0);
       }
-
-      // Schedule playback seamlessly
-      const source = this.ctx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(this.ctx.destination);
-
-      const currentTime = this.ctx.currentTime;
-      const scheduledTime = Math.max(currentTime, this.nextPlayTime);
-      source.start(scheduledTime);
-
-      this.nextPlayTime = scheduledTime + audioBuffer.duration;
-      this.isPlaying = true;
+      if (generation !== this.generation) return;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer; source.connect(ctx.destination);
+      const start = Math.max(ctx.currentTime + (this.started ? 0 : 0.15), this.nextPlayTime);
+      this.started = true;
+      this.nextPlayTime = start + buffer.duration;
       this.activeSourceNodes.push(source);
-
       source.onended = () => {
-        const idx = this.activeSourceNodes.indexOf(source);
-        if (idx !== -1) this.activeSourceNodes.splice(idx, 1);
-        if (this.activeSourceNodes.length === 0) {
-          this.isPlaying = false;
-        }
+        const index = this.activeSourceNodes.indexOf(source);
+        if (index >= 0) this.activeSourceNodes.splice(index, 1);
+        if (!this.activeSourceNodes.length) this.onIdle?.();
       };
-    } catch (err) {
-      console.warn('[AudioPlayer] Error decoding audio chunk:', err);
-    }
+      source.start(start);
+    } catch (error) { console.warn('Unable to play speech audio:', error); }
   }
 
-  /**
-   * Stop all playback immediately (Barge-in support)
-   */
   public stop() {
-    for (const source of this.activeSourceNodes) {
-      try {
-        source.stop();
-      } catch (e) {}
-    }
-    this.activeSourceNodes = [];
-    this.isPlaying = false;
-    if (this.ctx) {
-      this.nextPlayTime = this.ctx.currentTime;
-    }
+    this.generation++;
+    for (const source of this.activeSourceNodes) { try { source.stop(); } catch {} }
+    this.activeSourceNodes = []; this.pendingByte = null; this.started = false;
+    if (this.ctx) this.nextPlayTime = this.ctx.currentTime;
   }
 
-  public getIsPlaying(): boolean {
-    return this.isPlaying;
-  }
+  public getIsPlaying() { return this.activeSourceNodes.length > 0; }
 }

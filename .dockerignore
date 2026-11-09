@@ -9,3 +9,5 @@ scratch
 .local-postgres/
 .local-postgres-password
 .venv/
+
+server/.model-cache/
